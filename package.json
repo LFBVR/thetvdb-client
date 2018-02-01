@@ -1,0 +1,12 @@
+{
+  "name": "thetvdb-client",
+  "version": "0.1.0",
+  "description": "TheTVDb api client",
+  "main": "lib/index.js",
+  "repository": "https://github.com/LFBVR/thetvdb-client.git",
+  "author": "Gautier Lefebvre <gautier.lfbvr@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "dotenv jest --"
+  }
+}
