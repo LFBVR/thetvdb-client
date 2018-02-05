@@ -11,12 +11,21 @@ describe('TheTVDbClient', () => {
     it('authenticates the user', async () => {
       const client = new TheTVDbClient({ ...auth });
       const token = await client.authenticate();
-      expect(token).toBeTruthy();
+      expect(token).toBeDefined();
     });
 
     it('automatically authenticates the user', async () => {
       const client = new TheTVDbClient({ ...auth });
       const serie = await client.getSerie(121361);
+      expect(serie.id).toBe(121361);
+    });
+  });
+
+  describe('#getSerie', () => {
+    it('get the data of a serie', async () => {
+      const client = new TheTVDbClient({ ...auth });
+      const serie = await client.getSerie(121361);
+      expect(serie).toBeDefined();
       expect(serie.id).toBe(121361);
     });
   });
