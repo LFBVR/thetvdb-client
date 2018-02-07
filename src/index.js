@@ -47,12 +47,12 @@ export default class TheTVDbClient {
     // set proxy
     if (shouldDetectProxy) {
       this.agent.use((req) => {
-        if (req.url.startsWith('https:') && process.env.https_proxy) {
-          req.proxy(process.env.https_proxy);
+        if (req.url.startsWith('https:') && (process.env.https_proxy || process.env.HTTPS_PROXY)) {
+          req.proxy(process.env.https_proxy || process.env.HTTPS_PROXY);
         }
 
-        if (req.url.startsWith('http:') && process.env.http_proxy) {
-          req.proxy(process.env.http_proxy);
+        if (req.url.startsWith('http:') && (process.env.http_proxy || process.env.HTTP_PROXY)) {
+          req.proxy(process.env.http_proxy || process.env.HTTP_PROXY);
         }
 
         return req;
@@ -71,7 +71,8 @@ export default class TheTVDbClient {
       .post('/login')
       .send({ ...this.auth });
 
-    this.token = res.token;
+    this.token = res.body.token;
+    return this.token;
   }
 
   /**
