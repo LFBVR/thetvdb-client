@@ -96,6 +96,30 @@ export default class TheTVDbClient {
   }
 
   /**
+   * GET /languages
+   *
+   * @async
+   * @returns {Object[]} The languages.
+   */
+  async getLanguages() {
+    const { body } = await this._doRequest(() => this.agent.get('/languages'));
+    return body.data;
+  }
+
+  /**
+   * GET /languages/{id}
+   *
+   * @async
+   * @param {number} languageId - Language id.
+   * @returns {Object[]} The language.
+   */
+  async getLanguage(languageId) {
+    const e = encodeURIComponent;
+    const { body } = await this._doRequest(() => this.agent.get(`/languages/${e(languageId)}`));
+    return body.data;
+  }
+
+  /**
    * GET /search/series
    *
    * @async
