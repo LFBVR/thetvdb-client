@@ -334,4 +334,29 @@ export default class TheTVDbClient {
 
     return shouldReturnFullResponse ? res : res.body.data;
   }
+
+  /**
+   * GET /series/{id}/episodes/summary
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Serie summary.
+   */
+  async getSerieEpisodesSummary(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/episodes/summary`)
+      .set('Accept-Language', language || ''));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
 }

@@ -253,5 +253,32 @@ describe('TheTVDbClient', () => {
         expect(res.body.data).toBeInstanceOf(Array);
       });
     });
+
+    describe('#getSerieEpisodesSummary', () => {
+      it('fetches the summary of the serie', async () => {
+        const result = await client.getSerieEpisodesSummary(121361);
+        expect(result).toBeInstanceOf(Object);
+        expect(result.airedSeasons).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSerieEpisodesSummary(
+          121361,
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data.airedSeasons).toBeInstanceOf(Array);
+        expect(res.body.data.dvdSeasons).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSerieEpisodesSummary(121361);
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data.airedSeasons).toBeInstanceOf(Array);
+        expect(res.body.data.dvdSeasons).toBeInstanceOf(Array);
+      });
+    });
   });
 });
