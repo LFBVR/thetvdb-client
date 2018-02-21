@@ -341,11 +341,36 @@ export default class TheTVDbClient {
    * @async
    * @param {number} serieId - Id of the serie.
    * @param {Object} [opts] - Options.
-   * @param {string} [opts.language] - Override the language given in constructor.
    * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
    * @returns {Object} Serie summary.
    */
   async getSerieEpisodesSummary(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/episodes/summary`));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /series/{id}/filter
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [query] - Query parameters.
+   * @param {string[]} [query.keys] - List of query to filter by.
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Serie data filtered.
+   */
+  async getSerieFilter(serieId, { keys = [] } = {}, opts) {
     const e = encodeURIComponent;
 
     const { language, shouldReturnFullResponse } = {
@@ -354,7 +379,35 @@ export default class TheTVDbClient {
     };
 
     const res = await this._doRequest(() => this.agent
-      .get(`/series/${e(serieId)}/episodes/summary`)
+      .get(`/series/${e(serieId)}/filter`)
+      .set('Accept-Language', language || '')
+      .query({ keys: keys.join(',') }));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /series/{id}/images
+   *
+   * @description Returns a summary of the images for a particular series.
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Serie data filtered.
+   */
+  async getSerieImages(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/images`)
       .set('Accept-Language', language || ''));
 
     return shouldReturnFullResponse ? res : res.body.data;

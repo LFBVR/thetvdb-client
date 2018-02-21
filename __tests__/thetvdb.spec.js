@@ -280,5 +280,82 @@ describe('TheTVDbClient', () => {
         expect(res.body.data.dvdSeasons).toBeInstanceOf(Array);
       });
     });
+
+    describe('#getSerieFilter', () => {
+      it('fetches the data of a serie, filtered by keys', async () => {
+        const result = await client.getSerieFilter(121361, { keys: ['aliases'] });
+        expect(result).toBeInstanceOf(Object);
+        expect(result.aliases).toBeInstanceOf(Array);
+        expect(result.added).not.toBeDefined();
+      });
+
+      it('lets the user override the language', async () => {
+        const serie = await client.getSerieFilter(
+          121361,
+          { keys: ['aliases'] },
+          { language: 'fr' },
+        );
+
+        expect(serie).toBeInstanceOf(Object);
+        expect(serie.aliases).toBeInstanceOf(Array);
+        expect(serie.aliases).toContain('Le Trône de fer');
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSerieFilter(
+          121361,
+          { keys: ['aliases'] },
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data.aliases).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSerieFilter(
+          121361,
+          { keys: ['aliases'] },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data.aliases).toBeInstanceOf(Array);
+      });
+    });
+
+    describe('#getSerieImages', () => {
+      it('fetches the summary of images of a serie', async () => {
+        const result = await client.getSerieImages(121361);
+        expect(result).toBeInstanceOf(Object);
+        expect(typeof result.fanart).toBe('number');
+      });
+
+      it('lets the user override the language', async () => {
+        const result = await client.getSerieImages(121361, { language: 'fr' });
+
+        // don't know how to check that the language is different
+        expect(result).toBeInstanceOf(Object);
+        expect(typeof result.fanart).toBe('number');
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSerieImages(
+          121361,
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Object);
+        expect(typeof res.body.data.fanart).toBe('number');
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSerieImages(121361);
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Object);
+        expect(typeof res.body.data.fanart).toBe('number');
+      });
+    });
   });
 });
