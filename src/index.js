@@ -5,6 +5,7 @@ export default class TheTVDbClient {
   constructor({
     url = 'https://api.thetvdb.com/',
     shouldDetectProxy = true,
+    shouldReturnFullResponse = false,
     language = null,
     username,
     userkey,
@@ -17,6 +18,11 @@ export default class TheTVDbClient {
     };
 
     this.token = null;
+
+    this.opts = {
+      shouldReturnFullResponse,
+      language,
+    };
 
     this.agent = superagentProxy(superagent).agent();
 
@@ -38,9 +44,12 @@ export default class TheTVDbClient {
       return req;
     });
 
-    // set language
+    // set default language if not specified in request.
     this.agent.use((req) => {
-      req.set('Accept-Language', req.header['Accept-Language'] || language);
+      if (this.opts.language) {
+        req.set('Accept-Language', req.header['Accept-Language'] || this.opts.language);
+      }
+
       return req;
     });
 
@@ -64,20 +73,29 @@ export default class TheTVDbClient {
    * Get an auth token from the api.
    *
    * @async
-   * @returns {Promise} Resolves if the authentication succeeded.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object|string} Response object, or token.
    */
-  async authenticate() {
+  async authenticate(opts) {
     const res = await this.agent
       .post('/login')
       .send({ ...this.auth });
 
     this.token = res.body.token;
-    return this.token;
+
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    return shouldReturnFullResponse ? res : this.token;
   }
 
   /**
    * Send a request, and automatically tries to authenticate.
    *
+   * @async
    * @param {func} makeRequest - Request factory.
    * @returns {Promise.<Object>} The result of the request.
    */
@@ -99,11 +117,19 @@ export default class TheTVDbClient {
    * GET /languages
    *
    * @async
-   * @returns {Object[]} The languages.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object|Object[]} Response object, or the list of languages.
    */
-  async getLanguages() {
-    const { body } = await this._doRequest(() => this.agent.get('/languages'));
-    return body.data;
+  async getLanguages(opts) {
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent.get('/languages'));
+
+    return shouldReturnFullResponse ? res : res.body.data;
   }
 
   /**
@@ -111,12 +137,21 @@ export default class TheTVDbClient {
    *
    * @async
    * @param {number} languageId - Language id.
-   * @returns {Object[]} The language.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object|Object[]} Response object, or the language.
    */
-  async getLanguage(languageId) {
+  async getLanguage(languageId, opts) {
     const e = encodeURIComponent;
-    const { body } = await this._doRequest(() => this.agent.get(`/languages/${e(languageId)}`));
-    return body.data;
+
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent.get(`/languages/${e(languageId)}`));
+
+    return shouldReturnFullResponse ? res : res.body.data;
   }
 
   /**
@@ -127,11 +162,23 @@ export default class TheTVDbClient {
    * @param {string} query.name - Series name.
    * @param {string} query.imdbId - Series IMDB id.
    * @param {string} query.zap2itId - Series Zap2It id.
-   * @returns {Object[]} The series found.
+   * @param {Object} [opts=null] - Options.
+   * @param {string} [opts.language] - Override default language.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object|Object[]} Response object, of the list of series found.
    */
-  async searchSeries(query) {
-    const { body } = await this._doRequest(() => this.agent.get('/search/series').query(query));
-    return body.data;
+  async searchSeries(query, opts) {
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get('/search/series')
+      .query(query)
+      .set('Accept-Language', language || ''));
+
+    return shouldReturnFullResponse ? res : res.body.data;
   }
 
   /**
@@ -139,82 +186,152 @@ export default class TheTVDbClient {
    *
    * @async
    * @param {number} serieId - Id of the serie.
-   * @returns {Object} Serie data.
+   * @param {Object} [opts=null] - Options.
+   * @param {string} [opts.language] - Override default language.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Response object, or the serie data.
    */
-  async getSerie(serieId) {
-    const { body } = await this._doRequest(() => this.agent.get(`/series/${serieId}`));
-    return body.data;
+  async getSerie(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}`)
+      .set('Accept-Language', language || ''));
+
+    return shouldReturnFullResponse ? res : res.body.data;
   }
 
-  // /**
-  //  * GET /series/{id}/actors
-  //  *
-  //  * @async
-  //  * @param {number} serieId - Id of the serie.
-  //  * @returns {Object[]} Serie actors.
-  //  */
-  // async getSerieActors(serieId) {
-  //   const { body } = await this._doRequest(() => this.agent.get(`/series/${serieId}/actors`));
-  //   return body.data;
-  // }
+  /**
+   * HEAD /series/{id}
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [opts=null] - Options.
+   * @param {string} [opts.language] - Override default language.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Response object or headers.
+   */
+  async getSerieHead(serieId, opts) {
+    const e = encodeURIComponent;
 
-  // /**
-  //  * GET /series/{id}/episodes
-  //  *
-  //  * @async
-  //  * @param {number} serieId - Id of the serie.
-  //  * @param {Object} query - Query parameters.
-  //  * @param {number} [query.page=1] - Page of results to fetch.
-  //  * @param {Object} [opts] - Options.
-  //  * @param {string} [opts.language] - Override the language given in constructor.
-  //  * @returns {Object[]} Serie episodes.
-  //  */
-  // async getSerieEpisodes(serieId, { page = 1 } = {}, { language } = {}) {
-  //   const { body } = await this._doRequest(() => this.agent.get(`/series/${serieId}/episodes`));
-  //   return body.data;
-  // }
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
 
-  // /**
-  //  * GET /series/{id}/episodes/query
-  //  *
-  //  * @async
-  //  * @param {number} serieId - Id of the serie.
-  //  * @param {Object} query - Query parameters.
-  //  * @param {number} [query.absoluteNumber] - Absolute number of the episode.
-  //  * @param {number} [query.airedSeason] - Aired season number.
-  //  * @param {number} [query.airedEpisode] - Aired episode number.
-  //  * @param {number} [query.dvdSeason] - DVD season number.
-  //  * @param {number} [query.dvdEpisode] - DVD episode number.
-  //  * @param {number} [query.imdbId] - IMDB id of the series.
-  //  * @param {number} [query.page=1] - Page of results to fetch.
-  //  * @param {Object} [opts] - Options.
-  //  * @param {string} [opts.language] - Override the language given in constructor.
-  //  * @returns {Object[]} Serie episodes.
-  //  */
-  // async getSerieEpisodesQuery(serieId, {
-  //   absoluteNumber,
-  //   airedSeason,
-  //   airedEpisode,
-  //   dvdSeason,
-  //   dvdEpisode,
-  //   imdbId,
-  //   page = 1,
-  // } = {}, {
-  //   language,
-  // } = {}) {
-  //   const { body } = await this._doRequest(() => this.agent
-  //     .get(`/series/${serieId}/episodes/query`)
-  //     .set('Accept-Language', language)
-  //     .query({
-  //       absoluteNumber,
-  //       airedSeason,
-  //       airedEpisode,
-  //       dvdSeason,
-  //       dvdEpisode,
-  //       imdbId,
-  //       page,
-  //     }));
+    const res = await this._doRequest(() => this.agent
+      .head(`/series/${e(serieId)}`)
+      .set('Accept-Language', language));
 
-  //   return body.data;
-  // }
+    return shouldReturnFullResponse ? res : res.headers;
+  }
+
+  /**
+   * GET /series/{id}/actors
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [opts=null] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object|Object[]} Response object, or the list of actors of the serie.
+   */
+  async getSerieActors(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent.get(`/series/${e(serieId)}/actors`));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /series/{id}/episodes
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} query - Query parameters.
+   * @param {number} [query.page=1] - Page of results to fetch.
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object[]} Serie episodes.
+   */
+  async getSerieEpisodes(serieId, { page = 1 } = {}, opts) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/episodes`)
+      .query({ page })
+      .set('Accept-Language', language || ''));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /series/{id}/episodes/query
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} query - Query parameters.
+   * @param {number} [query.absoluteNumber] - Absolute number of the episode.
+   * @param {number} [query.airedSeason] - Aired season number.
+   * @param {number} [query.airedEpisode] - Aired episode number.
+   * @param {number} [query.dvdSeason] - DVD season number.
+   * @param {number} [query.dvdEpisode] - DVD episode number.
+   * @param {number} [query.imdbId] - IMDB id of the series.
+   * @param {number} [query.page=1] - Page of results to fetch.
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object[]} Serie episodes.
+   */
+  async getSerieEpisodesQuery(
+    serieId,
+    {
+      absoluteNumber,
+      airedSeason,
+      airedEpisode,
+      dvdSeason,
+      dvdEpisode,
+      imdbId,
+      page = 1,
+    } = {},
+    opts,
+  ) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/episodes/query`)
+      .set('Accept-Language', language || '')
+      .query({
+        absoluteNumber,
+        airedSeason,
+        airedEpisode,
+        dvdSeason,
+        dvdEpisode,
+        imdbId,
+        page,
+      }));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
 }
