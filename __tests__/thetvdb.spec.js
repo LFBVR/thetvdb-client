@@ -84,20 +84,24 @@ describe('TheTVDbClient', () => {
   });
 
   describe('Series', () => {
-    describe('#searchSeries', () => {
+    describe('#getSearchSeries', () => {
       it('searches series', async () => {
-        const result = await client.searchSeries({ name: 'game of thrones' });
+        const result = await client.getSearchSeries({ name: 'game of thrones' });
         expect(result).toBeInstanceOf(Array);
       });
 
       it('finds a serie by its IMDB id', async () => {
-        const result = await client.searchSeries({ imdbId: 'tt0944947' });
+        const result = await client.getSearchSeries({ imdbId: 'tt0944947' });
         expect(result).toBeInstanceOf(Array);
         expect(result).toHaveLength(1);
       });
 
       it('lets the user override the language', async () => {
-        const result = await client.searchSeries({ imdbId: 'tt0944947' }, { language: 'fr' });
+        const result = await client.getSearchSeries(
+          { imdbId: 'tt0944947' },
+          { language: 'fr' },
+        );
+
         expect(result).toBeInstanceOf(Array);
         expect(result).toHaveLength(1);
         // This field is the only way for the test to assert the language.
@@ -106,17 +110,42 @@ describe('TheTVDbClient', () => {
       });
 
       it('lets the user override the full response option', async () => {
-        const res = await client.searchSeries({ imdbId: 'tt0944947' }, { shouldReturnFullResponse: true });
+        const res = await client.getSearchSeries(
+          { imdbId: 'tt0944947' },
+          { shouldReturnFullResponse: true },
+        );
+
         expect(res).toBeInstanceOf(Response);
         expect(res.body.data).toBeInstanceOf(Array);
         expect(res.body.data).toHaveLength(1);
       });
 
       it('takes the constructor full response option', async () => {
-        const res = await fullResponseClient.searchSeries({ imdbId: 'tt0944947' });
+        const res = await fullResponseClient.getSearchSeries({ imdbId: 'tt0944947' });
         expect(res).toBeInstanceOf(Response);
         expect(res.body.data).toBeInstanceOf(Array);
         expect(res.body.data).toHaveLength(1);
+      });
+    });
+
+    describe('#getSearchSeriesParams', () => {
+      it('fetches the allowed query keys', async () => {
+        const result = await client.getSearchSeriesParams();
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSearchSeriesParams({ shouldReturnFullResponse: true });
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSearchSeriesParams();
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
       });
     });
 
@@ -254,6 +283,30 @@ describe('TheTVDbClient', () => {
       });
     });
 
+    describe('#getSerieEpisodesQueryParams', () => {
+      it('fetches the allowed query keys', async () => {
+        const result = await client.getSerieEpisodesQueryParams(121361);
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSerieEpisodesQueryParams(
+          121361,
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSerieEpisodesQueryParams(121361);
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+    });
+
     describe('#getSerieEpisodesSummary', () => {
       it('fetches the summary of the serie', async () => {
         const result = await client.getSerieEpisodesSummary(121361);
@@ -355,6 +408,159 @@ describe('TheTVDbClient', () => {
         expect(res).toBeInstanceOf(Response);
         expect(res.body.data).toBeInstanceOf(Object);
         expect(typeof res.body.data.fanart).toBe('number');
+      });
+    });
+
+    describe('#getSerieImagesQuery', () => {
+      it('fetches the images of a serie', async () => {
+        const result = await client.getSerieImagesQuery(121361, { keyType: 'poster' });
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the language', async () => {
+        const result = await client.getSerieImagesQuery(
+          121361,
+          { keyType: 'poster' },
+          { language: 'fr' },
+        );
+
+        // don't know how to check that the language is different
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSerieImagesQuery(
+          121361,
+          { keyType: 'poster' },
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSerieImagesQuery(
+          121361,
+          { keyType: 'poster' },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+    });
+
+    describe('#getSerieImagesQueryParams', () => {
+      it('fetches the allowed keys for the query', async () => {
+        const result = await client.getSerieImagesQueryParams(121361);
+        expect(result).toBeInstanceOf(Array);
+        expect(result[0].keyType).toBeDefined();
+        expect(result[0].resolution).toBeInstanceOf(Array);
+        expect(result[0].subKey).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getSerieImagesQueryParams(
+          121361,
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getSerieImagesQueryParams(121361);
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+    });
+  });
+
+  describe('Updates', () => {
+    describe('#getUpdatedQuery', () => {
+      it('fetches updated series', async () => {
+        const result = await client.getUpdatedQuery({ fromTime: new Date('2018-01-01') });
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getUpdatedQuery(
+          { fromTime: new Date('2018-01-01') },
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getUpdatedQuery({ fromTime: new Date('2018-01-01') });
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+    });
+
+    describe('#getUpdatedQueryParams', () => {
+      it('fetches the allowed keys for the query', async () => {
+        const result = await client.getUpdatedQueryParams();
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getUpdatedQueryParams({ shouldReturnFullResponse: true });
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getUpdatedQueryParams();
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+    });
+  });
+
+  describe('Episodes', () => {
+    describe('#getEpisode', () => {
+      it('fetches the episode data', async () => {
+        const result = await client.getEpisode(3254641);
+        expect(result).toBeInstanceOf(Object);
+        expect(result.id).toBe(3254641);
+      });
+
+      it('lets the user override the language', async () => {
+        const result = await client.getEpisode(
+          3254641,
+          { language: 'fr' },
+        );
+
+        expect(result).toBeInstanceOf(Object);
+        expect(result.id).toBe(3254641);
+        expect(result.episodeName).toBe("L'hiver vient");
+      });
+
+      it('lets the user override the full response option', async () => {
+        const res = await client.getEpisode(
+          3254641,
+          { shouldReturnFullResponse: true },
+        );
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Object);
+        expect(res.body.data.id).toBe(3254641);
+      });
+
+      it('takes the constructor full response option', async () => {
+        const res = await fullResponseClient.getEpisode(3254641);
+
+        expect(res).toBeInstanceOf(Response);
+        expect(res.body.data).toBeInstanceOf(Object);
+        expect(res.body.data.id).toBe(3254641);
       });
     });
   });

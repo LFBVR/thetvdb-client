@@ -165,9 +165,9 @@ export default class TheTVDbClient {
    * @param {Object} [opts=null] - Options.
    * @param {string} [opts.language] - Override default language.
    * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
-   * @returns {Object|Object[]} Response object, of the list of series found.
+   * @returns {Object|Object[]} Response object, or the list of series found.
    */
-  async searchSeries(query, opts) {
+  async getSearchSeries(query, opts) {
     const { language, shouldReturnFullResponse } = {
       ...this.opts,
       ...opts,
@@ -179,6 +179,27 @@ export default class TheTVDbClient {
       .set('Accept-Language', language || ''));
 
     return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /search/series/params
+   *
+   * @description Returns an array of parameters to query by in the /search/series route.
+   *
+   * @async
+   * @param {Object} [opts=null] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object|Object[]} Response object, or the params.
+   */
+  async getSearchSeriesParams(opts) {
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent.get('/search/series/params'));
+
+    return shouldReturnFullResponse ? res : res.body.data.params;
   }
 
   /**
@@ -336,6 +357,31 @@ export default class TheTVDbClient {
   }
 
   /**
+   * GET /series/{id}/episodes/query/params
+   *
+   * @description Returns the allowed query keys for the /series/{id}/episodes/query route.
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Parameters information.
+   */
+  async getSerieEpisodesQueryParams(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/episodes/query/params`));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
    * GET /series/{id}/episodes/summary
    *
    * @async
@@ -396,7 +442,7 @@ export default class TheTVDbClient {
    * @param {Object} [opts] - Options.
    * @param {string} [opts.language] - Override the language given in constructor.
    * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
-   * @returns {Object} Serie data filtered.
+   * @returns {Object} Serie images summary.
    */
   async getSerieImages(serieId, opts) {
     const e = encodeURIComponent;
@@ -408,6 +454,146 @@ export default class TheTVDbClient {
 
     const res = await this._doRequest(() => this.agent
       .get(`/series/${e(serieId)}/images`)
+      .set('Accept-Language', language || ''));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /series/{id}/images/query
+   *
+   * @description Query images for the given series ID.
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [query] - Query parameters.
+   * @param {string} [query.keyType] - Type of image you're querying for.
+   * @param {string} [query.subKey] - Subkey for the above query keys.
+   * @param {string} [query.resolution] - Resolution to filter by (1280x1024, for example).
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Serie images.
+   */
+  async getSerieImagesQuery(serieId, { keyType, subKey, resolution }, opts) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/images/query`)
+      .query({ keyType, subKey, resolution })
+      .set('Accept-Language', language || ''));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /series/{id}/images/query/params
+   *
+   * @description Returns the allowed query keys for the /series/{id}/images/query route.
+   *
+   * @async
+   * @param {number} serieId - Id of the serie.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Parameters information.
+   */
+  async getSerieImagesQueryParams(serieId, opts) {
+    const e = encodeURIComponent;
+
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/series/${e(serieId)}/images/query/params`));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /updated/query
+   *
+   * @description Returns an array of series that have changed in a maximum of one week blocks since
+   * the provided fromTime.
+   *
+   * @async
+   * @param {Object} query - Query parameters.
+   * @param {number|Date} query.fromTime - Epoch time to start your date range.
+   * @param {number|Date} [query.toTime] - Epoch time to end your date range. Must be one week from
+   * fromTime.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Updated series ids.
+   */
+  async getUpdatedQuery({ fromTime, toTime }, opts) {
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get('/updated/query')
+      .query({
+        fromTime: (fromTime?.getTime?.() / 1000) || fromTime,
+        toTime: (toTime?.getTime?.() / 1000) || toTime,
+      }));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /updated/query/params
+   *
+   * @description Returns an array of valid query keys for the /updated/query/params route.
+   *
+   * @async
+   * @param {Object} query - Query parameters.
+   * @param {number|Date} query.fromTime - Epoch time to start your date range.
+   * @param {number|Date} [query.toTime] - Epoch time to end your date range. Must be one week from
+   * fromTime.
+   * @param {Object} [opts] - Options.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Updated series ids.
+   */
+  async getUpdatedQueryParams(opts) {
+    const { shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent.get('/updated/query/params'));
+
+    return shouldReturnFullResponse ? res : res.body.data;
+  }
+
+  /**
+   * GET /episodes/{id}
+   *
+   * @description Returns the full information for a given episode id.
+   *
+   * @async
+   * @param {number} episodeId - ID of the episode.
+   * @param {Object} [opts] - Options.
+   * @param {string} [opts.language] - Override the language given in constructor.
+   * @param {boolean} [opts.shouldReturnFullResponse] - Override constructor option.
+   * @returns {Object} Episode data.
+   */
+  async getEpisode(episodeId, opts) {
+    const e = encodeURIComponent;
+
+    const { language, shouldReturnFullResponse } = {
+      ...this.opts,
+      ...opts,
+    };
+
+    const res = await this._doRequest(() => this.agent
+      .get(`/episodes/${e(episodeId)}`)
       .set('Accept-Language', language || ''));
 
     return shouldReturnFullResponse ? res : res.body.data;
