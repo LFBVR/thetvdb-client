@@ -1,6 +1,3 @@
-# Compiled binary addons
-lib/
-
 # Dependency directories
 node_modules/
 

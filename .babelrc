@@ -1,0 +1,18 @@
+{
+  "env": {
+    "test": {
+      "presets": [
+        "@babel/preset-es2015",
+        "@babel/preset-es2017",
+        "@babel/preset-stage-1"
+      ]
+    },
+    "development": {
+      "presets": [
+        ["@babel/preset-es2015", { "modules": false }],
+        "@babel/preset-es2017",
+        "@babel/preset-stage-1"
+      ]
+    }
+  }
+}

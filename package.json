@@ -1,0 +1,33 @@
+{
+  "name": "thetvdb-client",
+  "version": "0.1.0",
+  "description": "TheTVDb api client",
+  "main": "lib/index.js",
+  "repository": "https://github.com/LFBVR/thetvdb-client.git",
+  "author": "Gautier Lefebvre <gautier.lfbvr@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "dotenv jest --",
+    "test:watch": "dotenv jest -- --watch --"
+  },
+  "dependencies": {
+    "superagent": "^3.8.2",
+    "superagent-proxy": "^1.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.39",
+    "@babel/preset-env": "^7.0.0-beta.39",
+    "@babel/preset-es2015": "^7.0.0-beta.39",
+    "@babel/preset-es2017": "^7.0.0-beta.39",
+    "@babel/preset-stage-1": "^7.0.0-beta.39",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-eslint": "^8.2.1",
+    "babel-jest": "^22.1.0",
+    "dotenv-cli": "^1.4.0",
+    "eslint": "^4.17.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jest": "^21.7.0",
+    "jest": "^22.1.4"
+  }
+}
